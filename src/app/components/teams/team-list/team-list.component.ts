@@ -20,7 +20,6 @@ import { TeamFormComponent } from '../team-form/team-form.component';
 
       @if (showForm()) {
         <app-team-form
-          [team]="selectedTeam()"
           (submitted)="onTeamSubmitted()"
           (cancelled)="toggleForm()"
         ></app-team-form>
@@ -180,7 +179,6 @@ export class TeamListComponent implements OnInit {
   private teamService = inject(TeamService);
 
   teams = signal<Team[]>([]);
-  selectedTeam = signal<Team | undefined>(undefined);
   isLoading = signal(false);
   showForm = signal(false);
 
@@ -203,19 +201,17 @@ export class TeamListComponent implements OnInit {
   }
 
   toggleForm(): void {
-    this.selectedTeam.set(undefined);
     this.showForm.update(val => !val);
   }
 
   onTeamSubmitted(): void {
-    this.selectedTeam.set(undefined);
     this.showForm.set(false);
     this.loadTeams();
   }
 
   editTeam(team: Team): void {
-    this.selectedTeam.set(team);
-    this.showForm.set(true);
+    // This can be extended to edit in a modal or separate page
+    console.log('Edit team:', team);
   }
 
   deleteTeam(teamId: string): void {

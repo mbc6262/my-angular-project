@@ -1,6 +1,5 @@
 import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
 import { TaskService } from '../../../services';
 import { Task, TaskStatus } from '../../../models';
 import { TaskFormComponent } from '../task-form/task-form.component';
@@ -21,7 +20,6 @@ import { TaskFormComponent } from '../task-form/task-form.component';
 
       @if (showForm()) {
         <app-task-form
-          [task]="selectedTask()"
           (submitted)="onTaskSubmitted()"
           (cancelled)="toggleForm()"
         ></app-task-form>
@@ -43,10 +41,7 @@ import { TaskFormComponent } from '../task-form/task-form.component';
                     <div class="task-item" [class]="'priority-' + task.priority">
                       <div class="task-header">
                         <h4>{{ task.title }}</h4>
-                        <div class="task-actions">
-                          <button (click)="editTask(task)" class="edit-btn" title="עדכן">✏️</button>
-                          <button (click)="deleteTask(task.id)" class="delete-btn" title="מחק">🗑️</button>
-                        </div>
+                        <button (click)="deleteTask(task.id)" class="delete-btn" title="מחק">🗑️</button>
                       </div>
                       <p class="task-description">{{ task.description }}</p>
                       <div class="task-footer">
@@ -278,17 +273,11 @@ export class TaskListComponent implements OnInit {
   private taskService = inject(TaskService);
 
   tasks = signal<Task[]>([]);
-  selectedTask = signal<Task | undefined>(undefined);
   isLoading = signal(false);
   showForm = signal(false);
   statuses: TaskStatus[] = ['todo', 'in-progress', 'review', 'done'];
-  private pendingEditTaskId: string | null = null;
-  private route = inject(ActivatedRoute);
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      this.pendingEditTaskId = params['editTaskId'] || null;
-    });
     this.loadTasks();
   }
 
@@ -297,7 +286,6 @@ export class TaskListComponent implements OnInit {
     this.taskService.getTasks().subscribe({
       next: (tasks) => {
         this.tasks.set(tasks);
-        this.applyPendingEditTask();
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -308,12 +296,10 @@ export class TaskListComponent implements OnInit {
   }
 
   toggleForm(): void {
-    this.selectedTask.set(undefined);
     this.showForm.update(val => !val);
   }
 
   onTaskSubmitted(): void {
-    this.selectedTask.set(undefined);
     this.showForm.set(false);
     this.loadTasks();
   }
@@ -340,30 +326,12 @@ export class TaskListComponent implements OnInit {
     });
   }
 
-  editTask(task: Task): void {
-    this.selectedTask.set(task);
-    this.showForm.set(true);
-  }
-
   deleteTask(taskId: string): void {
     if (confirm('האם אתה בטוח שברצונך למחוק את המשימה?')) {
       this.taskService.deleteTask(taskId).subscribe({
         next: () => this.loadTasks(),
         error: (error) => console.error('Error deleting task:', error)
       });
-    }
-  }
-
-  private applyPendingEditTask(): void {
-    if (!this.pendingEditTaskId) {
-      return;
-    }
-
-    const task = this.tasks().find(t => t.id === this.pendingEditTaskId);
-    if (task) {
-      this.selectedTask.set(task);
-      this.showForm.set(true);
-      this.pendingEditTaskId = null;
     }
   }
 }

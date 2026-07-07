@@ -66,7 +66,7 @@ import { AuthService } from '../../../services';
             [disabled]="registerForm.invalid || isLoading()"
             class="submit-btn"
           >
-            {{ isLoading() ? 'נרשם...' : 'הרשם' }}
+            {{ isLoading() ? 'מירשום...' : 'הרשם' }}
           </button>
         </form>
 
@@ -210,24 +210,19 @@ export class RegisterComponent {
   }
 
   onSubmit(): void {
+    // התיקון: מונע לחיצה כפולה על ידי בדיקת isLoading()
     if (this.registerForm.valid && !this.isLoading()) {
       this.isLoading.set(true);
       this.errorMessage.set(null);
 
       this.authService.register(this.registerForm.value).subscribe({
-        next: () => {
-          // המידע נשמר אוטומטית בזכות ה-tap ב-AuthService, עוברים ישר פנימה
+        next: (response) => {
+          this.authService.saveAuthResponse(response);
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           this.isLoading.set(false);
-          
-          // טיפול חכם בשגיאות (כמו מייל כפול 409)
-          if (error.status === 409) {
-            this.errorMessage.set('כתובת הדוא"ל הזו כבר רשומה במערכת.');
-          } else {
-            this.errorMessage.set(error.error?.error || 'שגיאה בהרשמה, נסה שוב מאוחר יותר.');
-          }
+          this.errorMessage.set(error.error?.message || 'שגיאה בהרשמה');
         }
       });
     }

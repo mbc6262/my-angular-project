@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TaskService } from '../../../services';
 import { Task } from '../../../models';
 
@@ -62,7 +62,7 @@ import { Task } from '../../../models';
           </div>
 
           <div class="actions">
-            <button class="edit-btn" (click)="editTask()">✏️ עדכן</button>
+            <button class="edit-btn">✏️ עדכן</button>
             <button class="delete-btn">🗑️ מחק</button>
           </div>
         </div>
@@ -255,7 +255,6 @@ import { Task } from '../../../models';
 export class TaskDetailComponent implements OnInit {
   private taskService = inject(TaskService);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
 
   task = signal<Task | null>(null);
   isLoading = signal(false);
@@ -281,11 +280,5 @@ export class TaskDetailComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
-  }
-
-  editTask(): void {
-    if (this.task()) {
-      this.router.navigate(['/tasks'], { queryParams: { editTaskId: this.task()!.id } });
-    }
   }
 }

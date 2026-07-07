@@ -20,7 +20,6 @@ import { ProjectFormComponent } from '../project-form/project-form.component';
 
       @if (showForm()) {
         <app-project-form
-          [project]="selectedProject()"
           (submitted)="onProjectSubmitted()"
           (cancelled)="toggleForm()"
         ></app-project-form>
@@ -197,7 +196,6 @@ export class ProjectListComponent implements OnInit {
   private projectService = inject(ProjectService);
 
   projects = signal<Project[]>([]);
-  selectedProject = signal<Project | undefined>(undefined);
   isLoading = signal(false);
   showForm = signal(false);
 
@@ -220,19 +218,16 @@ export class ProjectListComponent implements OnInit {
   }
 
   toggleForm(): void {
-    this.selectedProject.set(undefined);
     this.showForm.update(val => !val);
   }
 
   onProjectSubmitted(): void {
-    this.selectedProject.set(undefined);
     this.showForm.set(false);
     this.loadProjects();
   }
 
   editProject(project: Project): void {
-    this.selectedProject.set(project);
-    this.showForm.set(true);
+    console.log('Edit project:', project);
   }
 
   deleteProject(projectId: string): void {

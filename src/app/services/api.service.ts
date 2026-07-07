@@ -8,35 +8,43 @@ import { Observable } from 'rxjs';
 export class ApiService {
   private http = inject(HttpClient);
   
-  // התיקון: הוספנו את /api בסוף הכתובת כדי שכל הבקשות יופנו לנתיב הנכון בשרת
+  // בסיס ה-API לשרת המקומי
   private readonly API_URL = 'http://localhost:3000/api';
 
   constructor() {}
 
+  private buildUrl(endpoint: string): string {
+    const normalizedEndpoint = endpoint.startsWith('/api')
+      ? endpoint.replace(/^\/api/, '')
+      : endpoint;
+
+    return `${this.API_URL}${normalizedEndpoint.startsWith('/') ? normalizedEndpoint : `/${normalizedEndpoint}`}`;
+  }
+
   // Generic GET request
   get<T>(endpoint: string): Observable<T> {
-    return this.http.get<T>(`${this.API_URL}${endpoint}`, {
+    return this.http.get<T>(this.buildUrl(endpoint), {
       headers: this.getHeaders()
     });
   }
 
   // Generic POST request
   post<T>(endpoint: string, data: any): Observable<T> {
-    return this.http.post<T>(`${this.API_URL}${endpoint}`, data, {
+    return this.http.post<T>(this.buildUrl(endpoint), data, {
       headers: this.getHeaders()
     });
   }
 
   // Generic PUT request
   put<T>(endpoint: string, data: any): Observable<T> {
-    return this.http.put<T>(`${this.API_URL}${endpoint}`, data, {
+    return this.http.put<T>(this.buildUrl(endpoint), data, {
       headers: this.getHeaders()
     });
   }
 
   // Generic DELETE request
   delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<T>(`${this.API_URL}${endpoint}`, {
+    return this.http.delete<T>(this.buildUrl(endpoint), {
       headers: this.getHeaders()
     });
   }

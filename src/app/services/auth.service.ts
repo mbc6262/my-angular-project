@@ -1,6 +1,6 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
+import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { AuthResponse, LoginRequest, RegisterRequest, User } from '../models';
 
@@ -13,21 +13,22 @@ export class AuthService {
 
   // Signal to track current user
   currentUser = signal<User | null>(null);
-  isAuthenticated = signal<boolean>(false);
+  isAuthenticated = signal<boolean>(false); // מתחילים ב-false כברירת מחדל בשרת
 
   constructor() {
     // מריצים את הטעינה רק אם אנחנו נמצאים בדפדפן
     if (typeof window !== 'undefined' && window.localStorage) {
       this.loadCurrentUser();
+      this.isAuthenticated.set(this.hasToken());
     }
   }
 
   // Load current user from localStorage
   private loadCurrentUser(): void {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+
     const userJson = localStorage.getItem('currentUser');
-    const token = localStorage.getItem('token');
-    
-    if (userJson && token) {
+    if (userJson) {
       try {
         this.currentUser.set(JSON.parse(userJson));
         this.isAuthenticated.set(true);
@@ -37,21 +38,16 @@ export class AuthService {
     }
   }
 
-  // Register new user - שמירה אוטומטית בעזרת tap
+  // Register new user
   register(request: RegisterRequest) {
-    return this.apiService.post<AuthResponse>('/auth/register', request).pipe(
-      tap(response => this.saveAuthResponse(response))
-    );
+    return this.apiService.post<AuthResponse>('/auth/register', request);
   }
 
-  // Login user - שמירה אוטומטית בעזרת tap
+  // Login user
   login(request: LoginRequest) {
-    return this.apiService.post<AuthResponse>('/auth/login', request).pipe(
-      tap(response => this.saveAuthResponse(response))
-    );
+    return this.apiService.post<AuthResponse>('/auth/login', request);
   }
-
-  // Save auth response to storage and update signals
+  // Save auth response
   saveAuthResponse(response: AuthResponse): void {
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.setItem('token', response.token);
@@ -72,9 +68,20 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  // Check if user has token
+  private hasToken(): boolean {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return !!localStorage.getItem('token');
+    }
+    return false;
+  }
+
   // Get current token
   getToken(): string | null {
-    return typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('token');
+    }
+    return null;
   }
 
   // Check if user is authenticated
